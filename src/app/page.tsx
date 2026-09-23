@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { desc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { ShoppingBasket, ChefHat, CalendarCheck, ArrowRight } from "lucide-react";
 import { db } from "@/db";
-import { lists } from "@/db/schema";
+import { lists, chores } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { Card } from "@/components/ui/card";
+import { ChoreCard } from "@/components/chores/chore-card";
+import { isDoneThisCycle } from "@/lib/schedule";
 
 function greeting() {
   const h = new Date().getHours();
@@ -21,12 +23,22 @@ const QUICK = [
 
 export default async function HomePage() {
   const user = await getCurrentUser();
-  const rows = await db.query.lists.findMany({
-    where: eq(lists.archived, false),
-    with: { items: { columns: { id: true, checked: true } } },
-    orderBy: [desc(lists.createdAt)],
-    limit: 4,
-  });
+  const [listRows, choreRows] = await Promise.all([
+    db.query.lists.findMany({
+      where: eq(lists.archived, false),
+      with: { items: { columns: { id: true, checked: true } } },
+      orderBy: [desc(lists.createdAt)],
+      limit: 4,
+    }),
+    db.query.chores.findMany({
+      where: eq(chores.assigneeId, user.id),
+      orderBy: [asc(chores.nextDueAt)],
+    }),
+  ]);
+
+  const dueChores = choreRows
+    .filter((c) => !isDoneThisCycle(c.cadence, c.lastDoneAt))
+    .slice(0, 3);
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -69,6 +81,37 @@ export default async function HomePage() {
         ))}
       </div>
 
+      {/* Your chores */}
+      {dueChores.length > 0 ? (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold">Your chores</h2>
+            <Link
+              href="/chores"
+              className="flex items-center gap-0.5 text-sm font-medium text-primary hover:underline"
+            >
+              All <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <div className="space-y-2.5">
+            {dueChores.map((c) => (
+              <ChoreCard
+                key={c.id}
+                chore={{
+                  id: c.id,
+                  name: c.name,
+                  cadence: c.cadence,
+                  scheduledDow: c.scheduledDow,
+                  scheduledTime: c.scheduledTime,
+                }}
+                assignee={null}
+                doneThisCycle={false}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {/* Active lists */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
@@ -81,7 +124,7 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        {rows.length === 0 ? (
+        {listRows.length === 0 ? (
           <Card className="p-5">
             <p className="text-sm text-muted-foreground">
               No lists yet.{" "}
@@ -93,7 +136,7 @@ export default async function HomePage() {
           </Card>
         ) : (
           <div className="space-y-2.5">
-            {rows.map((l) => {
+            {listRows.map((l) => {
               const total = l.items.length;
               const done = l.items.filter((i) => i.checked).length;
               const remaining = total - done;
