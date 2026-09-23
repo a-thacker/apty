@@ -1,0 +1,11 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="112" fill="#C05F3C"/>
+  <!-- bowl -->
+  <path d="M150 296 h212 a10 10 0 0 1 10 10 a116 116 0 0 1 -232 0 a10 10 0 0 1 10 -10 Z" fill="#FDF6EF"/>
+  <path d="M150 296 h212" stroke="#E7D8C6" stroke-width="8" stroke-linecap="round"/>
+  <!-- sprout stem -->
+  <path d="M256 300 C256 262 256 240 256 210" stroke="#6E7A4F" stroke-width="16" fill="none" stroke-linecap="round"/>
+  <!-- leaves -->
+  <path d="M256 258 C226 258 200 242 192 212 C224 206 250 224 256 258 Z" fill="#6E7A4F"/>
+  <path d="M256 240 C286 240 312 224 320 194 C288 188 262 206 256 240 Z" fill="#849160"/>
+</svg>

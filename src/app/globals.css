@@ -1,26 +1,142 @@
 @import "tailwindcss";
 
+/* Class-based dark mode (toggled on <html>), with system as the initial guess. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─── Design tokens ──────────────────────────────────────────────────────────
+   apty's identity: warm paper, espresso ink, terracotta + olive.
+   Deliberately NOT a cold SaaS dashboard. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f0e6; /* warm paper */
+  --foreground: #2a2521; /* espresso ink */
+
+  --card: #fdfaf4; /* warm white */
+  --card-foreground: #2a2521;
+
+  --muted: #ece3d5; /* warm sand */
+  --muted-foreground: #8a7d6c; /* taupe */
+
+  --border: #e5dac8;
+  --input: #e5dac8;
+
+  --primary: #c05f3c; /* terracotta */
+  --primary-foreground: #fdf6ef;
+
+  --secondary: #ece3d5; /* soft sand button */
+  --secondary-foreground: #3a332b;
+
+  --accent: #f0e3d3; /* hover wash */
+  --accent-foreground: #3a332b;
+
+  --olive: #6e7a4f; /* herb green */
+  --olive-foreground: #f7f4ea;
+  --honey: #d99a4e; /* streaks / highlights */
+
+  --destructive: #b23b2e;
+  --destructive-foreground: #fdf6ef;
+
+  --ring: #c05f3c;
+
+  --radius: 0.9rem;
 }
 
+.dark {
+  --background: #1c1815; /* warm espresso */
+  --foreground: #ece3d5;
+
+  --card: #26201b;
+  --card-foreground: #ece3d5;
+
+  --muted: #2e2620;
+  --muted-foreground: #a99c8b;
+
+  --border: #3a3128;
+  --input: #3a3128;
+
+  --primary: #d97a4f; /* brighter terracotta for contrast */
+  --primary-foreground: #1c1815;
+
+  --secondary: #2e2620;
+  --secondary-foreground: #ece3d5;
+
+  --accent: #332a22;
+  --accent-foreground: #ece3d5;
+
+  --olive: #8a955f;
+  --olive-foreground: #14120f;
+  --honey: #e0a458;
+
+  --destructive: #e06a55;
+  --destructive-foreground: #1c1815;
+
+  --ring: #d97a4f;
+}
+
+/* ─── Map tokens into Tailwind's theme (bg-*, text-*, border-*, rounded-*) ─── */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-olive: var(--olive);
+  --color-olive-foreground: var(--olive-foreground);
+  --color-honey: var(--honey);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  --radius-sm: calc(var(--radius) - 0.4rem);
+  --radius-md: calc(var(--radius) - 0.2rem);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 0.3rem);
+  --radius-2xl: calc(var(--radius) + 0.6rem);
 }
 
-@media (prefers-color-scheme: dark) {
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Barely-there warmth so large surfaces don't read as flat gray. */
+    background-image:
+      radial-gradient(60rem 60rem at 100% -10%, color-mix(in oklab, var(--honey) 8%, transparent), transparent 60%),
+      radial-gradient(50rem 50rem at -10% 10%, color-mix(in oklab, var(--olive) 6%, transparent), transparent 55%);
+    background-attachment: fixed;
+    min-height: 100dvh;
+  }
+
+  /* Respect iOS safe areas for the fixed bottom nav. */
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
 }
