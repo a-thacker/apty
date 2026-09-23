@@ -106,6 +106,8 @@ export default async function HomePage() {
                 }}
                 assignee={null}
                 doneThisCycle={false}
+                overdue={c.nextDueAt != null && c.nextDueAt.getTime() <= Date.now()}
+                rotates={c.rotation}
               />
             ))}
           </div>

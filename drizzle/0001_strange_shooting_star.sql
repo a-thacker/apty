@@ -1,0 +1,1 @@
+ALTER TABLE `chores` ADD `last_reminded_at` integer;

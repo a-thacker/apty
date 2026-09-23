@@ -98,6 +98,9 @@ export const chores = sqliteTable("chores", {
   scheduledTime: text("scheduled_time"), // "HH:MM" local
   lastDoneAt: integer("last_done_at", { mode: "timestamp" }),
   nextDueAt: integer("next_due_at", { mode: "timestamp" }),
+  // Last time a reminder/nag was pushed for the current cycle; reset when the
+  // chore is completed or its schedule changes. Throttles the overdue nagging.
+  lastRemindedAt: integer("last_reminded_at", { mode: "timestamp" }),
   createdBy: text("created_by").references(() => users.id),
   archived: integer("archived", { mode: "boolean" }).notNull().default(false),
   createdAt: createdAt(),

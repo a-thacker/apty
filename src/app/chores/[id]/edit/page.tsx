@@ -40,6 +40,7 @@ export default async function EditChorePage({ params }: { params: Promise<{ id: 
           description: chore.description,
           assigneeId: chore.assigneeId,
           cadence: chore.cadence,
+          rotation: chore.rotation,
           scheduledDow: chore.scheduledDow,
           scheduledTime: chore.scheduledTime,
         }}

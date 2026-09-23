@@ -15,13 +15,19 @@ through a Cloudflare Tunnel (no open ports).
 ## What's built
 
 - **Lists** — create named lists (e.g. `C&A Groceries`), quick-add items, check them
-  off, per-item **Walmart search deep links**, clear/delete. ✅ fully working
-- **Home** — greeting + quick actions + your lists at a glance ✅
+  off, per-item **Walmart search deep links**, clear/delete. ✅
+- **Home** — greeting + quick actions + your due chores + your lists at a glance ✅
+- **Cook (Recipes)** — create / edit / delete recipes with quantity + unit
+  ingredient rows and a detail view. ✅
+- **Meal planner** — pick the meals you're cooking → ingredients merge (same
+  name + unit are summed) → tap anything you already have → push the rest to a
+  grocery list (existing or new). ✅
+- **Chores** — one per roommate, self-scheduled (pick your own day + time), and
+  either **fixed** (always the same person) or **rotating** (hands off to the next
+  roommate each time it's done). Reminders push when a chore is due and keep
+  **nagging while it's overdue** (throttled, with overnight quiet hours); marking
+  it done advances the cycle. ✅
 - **Settings** — light/dark, push-notification enrollment ✅
-- **Recipes / Cook** and **Chores** — designed placeholders; schema + reminder
-  plumbing are in place. 🚧 next up
-- **Meal planner** (select meals → merge ingredients → "already have it?" → grocery
-  list) — designed, not yet built. 🚧
 
 ## Local development
 
@@ -89,7 +95,10 @@ docker compose cp app:/app/data/apty.db ./apty-backup-$(date +%F).db
 
 ### 4. Chore reminders (cron on the host)
 
-Run the reminder worker on the same cadence as `REMINDER_WINDOW_MIN` (default 15):
+Run the reminder worker every ~15 minutes. It pushes each chore when it comes due
+and re-nags overdue, unfinished ones every `REMINDER_NAG_HOURS` (default 6),
+staying silent between `REMINDER_QUIET_START` and `REMINDER_QUIET_END`
+(default 22:00–08:00 local):
 
 ```cron
 */15 * * * * cd /path/to/apty && docker compose exec -T app npm run reminders

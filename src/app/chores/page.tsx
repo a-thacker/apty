@@ -16,6 +16,8 @@ export const metadata: Metadata = { title: "Chores" };
 type Row = Chore & { assignee: { name: string | null; color: string } | null };
 
 function renderCard(c: Row, showAssignee: boolean) {
+  const done = isDoneThisCycle(c.cadence, c.lastDoneAt);
+  const overdue = !done && c.nextDueAt != null && c.nextDueAt.getTime() <= Date.now();
   return (
     <ChoreCard
       key={c.id}
@@ -27,7 +29,9 @@ function renderCard(c: Row, showAssignee: boolean) {
         scheduledTime: c.scheduledTime,
       }}
       assignee={c.assignee}
-      doneThisCycle={isDoneThisCycle(c.cadence, c.lastDoneAt)}
+      doneThisCycle={done}
+      overdue={overdue}
+      rotates={c.rotation}
       showAssignee={showAssignee}
     />
   );

@@ -8,6 +8,13 @@
       "when": 1790130754491,
       "tag": "0000_ordinary_shinko_yamashiro",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790187885451,
+      "tag": "0001_strange_shooting_star",
+      "breakpoints": true
     }
   ]
 }

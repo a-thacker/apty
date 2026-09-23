@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, Label } from "@/components/ui/select";
 import { CADENCES, DOW } from "@/lib/schedule";
+import { cn } from "@/lib/utils";
 
 type UserOpt = { id: string; name: string };
 
@@ -21,6 +22,7 @@ type Props = {
     description: string | null;
     assigneeId: string | null;
     cadence: string;
+    rotation: boolean;
     scheduledDow: number | null;
     scheduledTime: string | null;
   };
@@ -30,6 +32,7 @@ export function ChoreForm({ users, currentUserId, chore }: Props) {
   const router = useRouter();
   const [name, setName] = useState(chore?.name ?? "");
   const [assigneeId, setAssigneeId] = useState(chore?.assigneeId ?? currentUserId);
+  const [rotation, setRotation] = useState(chore?.rotation ?? false);
   const [cadence, setCadence] = useState(chore?.cadence ?? "weekly");
   const [dow, setDow] = useState(chore?.scheduledDow != null ? String(chore.scheduledDow) : "0");
   const [time, setTime] = useState(chore?.scheduledTime ?? "18:00");
@@ -43,6 +46,7 @@ export function ChoreForm({ users, currentUserId, chore }: Props) {
       description,
       assigneeId,
       cadence,
+      rotation,
       scheduledDow: cadence === "daily" ? null : Number(dow),
       scheduledTime: time || null,
     };
@@ -67,7 +71,36 @@ export function ChoreForm({ users, currentUserId, chore }: Props) {
       </div>
 
       <div>
-        <Label htmlFor="assignee">Who&apos;s doing it</Label>
+        <Label>Assignment</Label>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { val: false, label: "One person", hint: "Always the same roommate" },
+            { val: true, label: "Rotate", hint: "Hands off each time it's done" },
+          ].map((opt) => {
+            const on = rotation === opt.val;
+            return (
+              <button
+                key={String(opt.val)}
+                type="button"
+                onClick={() => setRotation(opt.val)}
+                aria-pressed={on}
+                className={cn(
+                  "rounded-xl border p-3 text-left transition-colors active:scale-[.99]",
+                  on
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/40"
+                    : "border-border hover:border-primary/40",
+                )}
+              >
+                <p className="text-sm font-medium">{opt.label}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{opt.hint}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="assignee">{rotation ? "Starts with" : "Who's doing it"}</Label>
         <Select id="assignee" value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)}>
           {users.map((u) => (
             <option key={u.id} value={u.id}>
@@ -76,6 +109,11 @@ export function ChoreForm({ users, currentUserId, chore }: Props) {
             </option>
           ))}
         </Select>
+        {rotation ? (
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Takes turns between roommates — whoever&apos;s up gets the reminders.
+          </p>
+        ) : null}
       </div>
 
       <div>

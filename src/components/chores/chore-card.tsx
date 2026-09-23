@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { Check, Clock, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Check, Clock, MoreVertical, Pencil, Repeat, Trash2 } from "lucide-react";
 import { markChoreDone, deleteChore } from "@/app/chores/actions";
 import { describeSchedule } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,8 @@ type Props = {
   };
   assignee: { name: string | null; color: string } | null;
   doneThisCycle: boolean;
+  overdue?: boolean;
+  rotates?: boolean;
   showAssignee?: boolean;
 };
 
@@ -29,7 +31,14 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-export function ChoreCard({ chore, assignee, doneThisCycle, showAssignee }: Props) {
+export function ChoreCard({
+  chore,
+  assignee,
+  doneThisCycle,
+  overdue,
+  rotates,
+  showAssignee,
+}: Props) {
   const [done, setDone] = useState(doneThisCycle);
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -67,11 +76,23 @@ export function ChoreCard({ chore, assignee, doneThisCycle, showAssignee }: Prop
         <p className={cn("truncate font-medium", done && "text-muted-foreground line-through")}>
           {chore.name}
         </p>
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <Clock className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">
-            {describeSchedule(chore.cadence, chore.scheduledDow, chore.scheduledTime)}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          <span className="inline-flex min-w-0 items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">
+              {describeSchedule(chore.cadence, chore.scheduledDow, chore.scheduledTime)}
+            </span>
           </span>
+          {rotates ? (
+            <span className="inline-flex shrink-0 items-center gap-1 text-xs">
+              <Repeat className="h-3 w-3" /> Rotates
+            </span>
+          ) : null}
+          {overdue && !done ? (
+            <span className="shrink-0 rounded-full bg-honey/20 px-2 py-0.5 text-xs font-medium text-honey">
+              Overdue
+            </span>
+          ) : null}
         </div>
       </div>
 

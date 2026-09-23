@@ -46,7 +46,13 @@ export function describeSchedule(
   return t ? `${base} · ${t}` : base;
 }
 
-/** Next due timestamp (unix seconds) for display. Biweekly is approximated as weekly. */
+/**
+ * Next due timestamp (unix seconds) after `from`, spaced by cadence and landing
+ * on the chosen day/time. Called with `from = now` at creation (soonest
+ * occurrence) and `from = completion time` when a chore is marked done (full
+ * cycle out). Biweekly/monthly are anchored to `from`, so their spacing is
+ * exact when a chore is completed on or after its due time (the common case).
+ */
 export function computeNextDue(
   cadence: string,
   dow: number | null | undefined,
@@ -66,6 +72,9 @@ export function computeNextDue(
   const cur = next.getDay();
   let delta = ((dow as number) - cur + 7) % 7;
   if (delta === 0 && next <= from) delta = 7;
+  // Push past the first landing to fill out longer cycles (14 / 28 days).
+  if (cadence === "biweekly") delta += 7;
+  else if (cadence === "monthly") delta += 21;
   next.setDate(next.getDate() + delta);
   return Math.floor(next.getTime() / 1000);
 }
