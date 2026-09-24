@@ -18,6 +18,7 @@ type Recipe = {
   name: string;
   servings: number | null;
   ingredients: { name: string; qty: number | null; unit: string | null }[];
+  components?: string[];
 };
 type ListOpt = { id: string; name: string; emoji: string | null };
 
@@ -119,6 +120,9 @@ export function Planner({
                   <p className="text-sm text-muted-foreground">
                     {r.ingredients.length} ingredient{r.ingredients.length === 1 ? "" : "s"}
                   </p>
+                  {r.components && r.components.length > 0 ? (
+                    <p className="truncate text-xs text-olive">incl. {r.components.join(", ")}</p>
+                  ) : null}
                 </div>
               </button>
             );

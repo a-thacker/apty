@@ -59,8 +59,23 @@ export const recipes = sqliteTable("recipes", {
   description: text("description"),
   servings: integer("servings").default(2),
   tags: text("tags"), // JSON-encoded string[]
+  // "meal" = a plannable dish; "component" = a reusable sub-part (e.g. cilantro
+  // rice) that meals can include. Components share the recipe_ingredients table.
+  kind: text("kind").notNull().default("meal"), // meal | component
   createdBy: text("created_by").references(() => users.id),
   createdAt: createdAt(),
+});
+
+// Links a meal recipe to the reusable components it includes. Both sides point
+// at `recipes` (the component is a recipe with kind="component").
+export const recipeComponents = sqliteTable("recipe_components", {
+  id: pk(),
+  recipeId: text("recipe_id")
+    .notNull()
+    .references(() => recipes.id, { onDelete: "cascade" }),
+  componentId: text("component_id")
+    .notNull()
+    .references(() => recipes.id, { onDelete: "cascade" }),
 });
 
 export const recipeIngredients = sqliteTable("recipe_ingredients", {

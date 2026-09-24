@@ -15,6 +15,13 @@
       "when": 1790187885451,
       "tag": "0001_strange_shooting_star",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790203697775,
+      "tag": "0002_petite_scalphunter",
+      "breakpoints": true
     }
   ]
 }

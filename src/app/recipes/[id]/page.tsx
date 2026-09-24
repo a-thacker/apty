@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { asc, eq } from "drizzle-orm";
-import { ChevronLeft, Sparkles } from "lucide-react";
+import { ChevronLeft, Sparkles, Blocks } from "lucide-react";
 import { db } from "@/db";
-import { recipes, recipeIngredients } from "@/db/schema";
+import { recipes, recipeIngredients, recipeComponents } from "@/db/schema";
 import { RecipeMenu } from "@/components/recipes/recipe-menu";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,15 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
     with: { ingredients: { orderBy: [asc(recipeIngredients.sortOrder)] } },
   });
   if (!recipe) notFound();
+  const isComponent = recipe.kind === "component";
+
+  const included = isComponent
+    ? []
+    : await db
+        .select({ id: recipes.id, name: recipes.name })
+        .from(recipeComponents)
+        .innerJoin(recipes, eq(recipeComponents.componentId, recipes.id))
+        .where(eq(recipeComponents.recipeId, id));
 
   return (
     <div className="space-y-5">
@@ -43,11 +52,14 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
           <h1 className="font-display text-2xl font-semibold leading-tight tracking-tight">
             {recipe.name}
           </h1>
-          {recipe.servings ? (
-            <Badge variant="muted" className="mt-1.5">
-              serves {recipe.servings}
-            </Badge>
-          ) : null}
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {isComponent ? (
+              <Badge variant="olive">
+                <Blocks className="mr-1 h-3 w-3" /> Component
+              </Badge>
+            ) : null}
+            {recipe.servings ? <Badge variant="muted">serves {recipe.servings}</Badge> : null}
+          </div>
         </div>
         <RecipeMenu recipeId={recipe.id} />
       </div>
@@ -77,6 +89,28 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
         )}
       </Card>
 
+      {included.length > 0 ? (
+        <Card>
+          <div className="border-b border-border px-5 py-3">
+            <p className="font-display font-semibold">Includes</p>
+          </div>
+          <ul className="divide-y divide-border">
+            {included.map((c) => (
+              <li key={c.id}>
+                <Link
+                  href={`/recipes/${c.id}`}
+                  className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-accent/50"
+                >
+                  <Blocks className="h-4 w-4 shrink-0 text-olive" />
+                  <span className="flex-1">{c.name}</span>
+                  <ChevronLeft className="h-4 w-4 shrink-0 rotate-180 text-muted-foreground" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
+
       {recipe.description ? (
         <Card className="p-5">
           <p className="mb-1 font-display font-semibold">Notes</p>
@@ -84,11 +118,19 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
         </Card>
       ) : null}
 
-      <Link href={`/plan?add=${recipe.id}`} className="block">
-        <Button variant="olive" className="w-full">
-          <Sparkles /> Plan a meal with this
-        </Button>
-      </Link>
+      {isComponent ? (
+        <Link href={`/recipes/${recipe.id}/edit`} className="block">
+          <Button variant="outline" className="w-full">
+            Edit component
+          </Button>
+        </Link>
+      ) : (
+        <Link href={`/plan?add=${recipe.id}`} className="block">
+          <Button variant="olive" className="w-full">
+            <Sparkles /> Plan a meal with this
+          </Button>
+        </Link>
+      )}
     </div>
   );
 }

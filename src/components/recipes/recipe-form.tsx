@@ -1,31 +1,41 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, Check } from "lucide-react";
 import { createRecipe, updateRecipe } from "@/app/recipes/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 type Row = { name: string; qty: string; unit: string };
+type Kind = "meal" | "component";
 
 type Props = {
+  kind?: Kind;
+  availableComponents?: { id: string; name: string }[];
   recipe?: {
     id: string;
     name: string;
     description: string | null;
     servings: number | null;
     ingredients: { name: string; qty: number | null; unit: string | null }[];
+    componentIds?: string[];
   };
 };
 
-export function RecipeForm({ recipe }: Props) {
+export function RecipeForm({ kind = "meal", availableComponents = [], recipe }: Props) {
   const router = useRouter();
+  const isComponent = kind === "component";
+  const noun = isComponent ? "component" : "recipe";
+
   const [name, setName] = useState(recipe?.name ?? "");
   const [description, setDescription] = useState(recipe?.description ?? "");
   const [servings, setServings] = useState(String(recipe?.servings ?? 2));
+  const [componentIds, setComponentIds] = useState<string[]>(recipe?.componentIds ?? []);
   const [rows, setRows] = useState<Row[]>(
     recipe?.ingredients.length
       ? recipe.ingredients.map((i) => ({
@@ -42,6 +52,8 @@ export function RecipeForm({ recipe }: Props) {
   const addRow = () => setRows((prev) => [...prev, { name: "", qty: "", unit: "" }]);
   const removeRow = (idx: number) =>
     setRows((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
+  const toggleComponent = (id: string) =>
+    setComponentIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   function submit() {
     if (!name.trim() || pending) return;
@@ -49,6 +61,8 @@ export function RecipeForm({ recipe }: Props) {
       name: name.trim(),
       description,
       servings: Number(servings) || undefined,
+      kind,
+      componentIds: isComponent ? [] : componentIds,
       ingredients: rows
         .filter((r) => r.name.trim())
         .map((r) => ({
@@ -71,12 +85,12 @@ export function RecipeForm({ recipe }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <Label htmlFor="recipe-name">Recipe name</Label>
+        <Label htmlFor="recipe-name">{isComponent ? "Component name" : "Recipe name"}</Label>
         <Input
           id="recipe-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Chicken & rice bowls"
+          placeholder={isComponent ? "e.g. Cilantro rice" : "e.g. Chicken & rice bowls"}
           autoFocus
         />
       </div>
@@ -136,6 +150,53 @@ export function RecipeForm({ recipe }: Props) {
         </Button>
       </div>
 
+      {/* Shared components — meals only */}
+      {!isComponent ? (
+        <div>
+          <Label>Shared components</Label>
+          <p className="mb-2 text-xs text-muted-foreground">
+            Reusable parts (like cilantro rice) whose ingredients fold in when you plan.
+          </p>
+          {availableComponents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              None yet —{" "}
+              <Link href="/recipes/new?kind=component" className="font-medium text-olive hover:underline">
+                create a component
+              </Link>{" "}
+              first.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {availableComponents.map((c) => {
+                const on = componentIds.includes(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => toggleComponent(c.id)}
+                    aria-pressed={on}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors active:scale-[.99]",
+                      on ? "border-olive bg-olive/5 ring-1 ring-olive/40" : "border-border hover:border-olive/40",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                        on ? "border-olive bg-olive text-olive-foreground" : "border-border text-transparent",
+                      )}
+                    >
+                      <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                    </span>
+                    <span className="flex-1">{c.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : null}
+
       <div>
         <Label htmlFor="notes">Notes (optional)</Label>
         <Textarea
@@ -148,7 +209,7 @@ export function RecipeForm({ recipe }: Props) {
 
       <div className="flex gap-2">
         <Button onClick={submit} disabled={!name.trim() || pending} className="flex-1">
-          <Save /> {recipe ? "Save changes" : "Save recipe"}
+          <Save /> {recipe ? "Save changes" : `Save ${noun}`}
         </Button>
         <Button variant="outline" onClick={() => router.back()}>
           Cancel

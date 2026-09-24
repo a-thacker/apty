@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { desc } from "drizzle-orm";
-import { ChefHat, Plus, Sparkles, ArrowRight } from "lucide-react";
+import { ChefHat, Plus, Sparkles, ArrowRight, Blocks } from "lucide-react";
 import { db } from "@/db";
 import { recipes } from "@/db/schema";
 import { PageHeader } from "@/components/page-header";
@@ -16,6 +16,8 @@ export default async function RecipesPage() {
     with: { ingredients: { columns: { id: true } } },
     orderBy: [desc(recipes.createdAt)],
   });
+  const meals = rows.filter((r) => r.kind !== "component");
+  const components = rows.filter((r) => r.kind === "component");
 
   return (
     <div className="space-y-6">
@@ -44,13 +46,13 @@ export default async function RecipesPage() {
       </Link>
 
       <div className="space-y-3">
-        <h2 className="font-display text-lg font-semibold">Recipes</h2>
-        {rows.length === 0 ? (
+        <h2 className="font-display text-lg font-semibold">Meals</h2>
+        {meals.length === 0 ? (
           <Card className="p-6 text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
               <ChefHat className="h-6 w-6" />
             </div>
-            <p className="font-display text-lg font-medium">No recipes yet</p>
+            <p className="font-display text-lg font-medium">No meals yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Save the meals you cook together, with ingredient quantities.
             </p>
@@ -62,7 +64,7 @@ export default async function RecipesPage() {
           </Card>
         ) : (
           <div className="space-y-2.5">
-            {rows.map((r) => (
+            {meals.map((r) => (
               <Link key={r.id} href={`/recipes/${r.id}`}>
                 <Card className="flex items-center gap-3.5 p-4 transition-colors hover:border-primary/40 active:scale-[.99]">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted text-xl">
@@ -75,6 +77,47 @@ export default async function RecipesPage() {
                     </p>
                   </div>
                   {r.servings ? <Badge variant="muted">serves {r.servings}</Badge> : null}
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Reusable components */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold">Components</h2>
+          <Link
+            href="/recipes/new?kind=component"
+            className="flex items-center gap-0.5 text-sm font-medium text-olive hover:underline"
+          >
+            <Plus className="h-3.5 w-3.5" /> New
+          </Link>
+        </div>
+        {components.length === 0 ? (
+          <Card className="p-5">
+            <p className="text-sm text-muted-foreground">
+              Reusable parts you share across meals — like{" "}
+              <span className="font-medium text-foreground">cilantro rice</span> or{" "}
+              <span className="font-medium text-foreground">roasted peppers &amp; onions</span>.
+              Make one, then add it to any meal.
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-2.5">
+            {components.map((c) => (
+              <Link key={c.id} href={`/recipes/${c.id}`}>
+                <Card className="flex items-center gap-3.5 p-4 transition-colors hover:border-olive/40 active:scale-[.99]">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-olive/15 text-olive">
+                    <Blocks className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{c.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {c.ingredients.length} ingredient{c.ingredients.length === 1 ? "" : "s"}
+                    </p>
+                  </div>
                 </Card>
               </Link>
             ))}
